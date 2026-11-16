@@ -1,8 +1,0 @@
-[
-{
-  "directory": "/Users/hector/Desktop/cppgaming/build",
-  "command": "/usr/bin/c++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -isystem /opt/homebrew/include -g -std=gnu++17 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/System/Library/Frameworks  -o CMakeFiles/cppgaming.dir/src/main.cpp.o -c /Users/hector/Desktop/cppgaming/src/main.cpp",
-  "file": "/Users/hector/Desktop/cppgaming/src/main.cpp",
-  "output": "CMakeFiles/cppgaming.dir/src/main.cpp.o"
-}
-]
