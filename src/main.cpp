@@ -1,13 +1,13 @@
-#include <raylib.h>
-
-int main() {
-    InitWindow(800, 450, "Raylib on M4");
-    while (!WindowShouldClose()) {
+#include<iostream>
+#include<raylib.h>
+int main(){
+    InitWindow(400,500,"HOLA WORLD");
+    while(!WindowShouldClose()){
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawText("Hello Raylib!", 190, 200, 20, LIGHTGRAY);
+            ClearBackground(RAYWHITE);
+            DrawText("HI", 100, 100, 10, BLACK);
         EndDrawing();
     }
     CloseWindow();
-    return 0;
-}   
+
+}
