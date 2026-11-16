@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.15)
+
+
+project(cppgaming)
+add_subdirectory(thirdparty/imgui-docking)
+add_subdirectory(thirdparty/rlimgui)
+add_subdirectory(thirdparty/raylib)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(${PROJECT_NAME} src/main.cpp)
+target_link_libraries(${PROJECT_NAME} raylib imgui rlimgui)
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME} "-framework IOKit")
+    target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
+endif()
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)

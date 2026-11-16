@@ -3,4 +3,4 @@
 /output
 CMakeSettings.json
 settings/
-saves/
+saves/.DS_Store
