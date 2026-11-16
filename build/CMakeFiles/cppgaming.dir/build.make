@@ -75,28 +75,28 @@ include CMakeFiles/cppgaming.dir/flags.make
 CMakeFiles/cppgaming.dir/codegen:
 .PHONY : CMakeFiles/cppgaming.dir/codegen
 
-CMakeFiles/cppgaming.dir/main.cpp.o: CMakeFiles/cppgaming.dir/flags.make
-CMakeFiles/cppgaming.dir/main.cpp.o: /Users/hector/Desktop/cppgaming/main.cpp
-CMakeFiles/cppgaming.dir/main.cpp.o: CMakeFiles/cppgaming.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/hector/Desktop/cppgaming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/cppgaming.dir/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cppgaming.dir/main.cpp.o -MF CMakeFiles/cppgaming.dir/main.cpp.o.d -o CMakeFiles/cppgaming.dir/main.cpp.o -c /Users/hector/Desktop/cppgaming/main.cpp
+CMakeFiles/cppgaming.dir/src/main.cpp.o: CMakeFiles/cppgaming.dir/flags.make
+CMakeFiles/cppgaming.dir/src/main.cpp.o: /Users/hector/Desktop/cppgaming/src/main.cpp
+CMakeFiles/cppgaming.dir/src/main.cpp.o: CMakeFiles/cppgaming.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/hector/Desktop/cppgaming/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/cppgaming.dir/src/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cppgaming.dir/src/main.cpp.o -MF CMakeFiles/cppgaming.dir/src/main.cpp.o.d -o CMakeFiles/cppgaming.dir/src/main.cpp.o -c /Users/hector/Desktop/cppgaming/src/main.cpp
 
-CMakeFiles/cppgaming.dir/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cppgaming.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/hector/Desktop/cppgaming/main.cpp > CMakeFiles/cppgaming.dir/main.cpp.i
+CMakeFiles/cppgaming.dir/src/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cppgaming.dir/src/main.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/hector/Desktop/cppgaming/src/main.cpp > CMakeFiles/cppgaming.dir/src/main.cpp.i
 
-CMakeFiles/cppgaming.dir/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cppgaming.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/hector/Desktop/cppgaming/main.cpp -o CMakeFiles/cppgaming.dir/main.cpp.s
+CMakeFiles/cppgaming.dir/src/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cppgaming.dir/src/main.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/hector/Desktop/cppgaming/src/main.cpp -o CMakeFiles/cppgaming.dir/src/main.cpp.s
 
 # Object files for target cppgaming
 cppgaming_OBJECTS = \
-"CMakeFiles/cppgaming.dir/main.cpp.o"
+"CMakeFiles/cppgaming.dir/src/main.cpp.o"
 
 # External object files for target cppgaming
 cppgaming_EXTERNAL_OBJECTS =
 
-cppgaming: CMakeFiles/cppgaming.dir/main.cpp.o
+cppgaming: CMakeFiles/cppgaming.dir/src/main.cpp.o
 cppgaming: CMakeFiles/cppgaming.dir/build.make
 cppgaming: /opt/homebrew/lib/libraylib.6.2.0.dylib
 cppgaming: CMakeFiles/cppgaming.dir/link.txt
