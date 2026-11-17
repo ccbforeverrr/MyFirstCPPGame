@@ -1,5 +1,5 @@
 //========================================================================
-// GLFW 3.5 macOS - www.glfw.org
+// GLFW 3.4 macOS - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2009-2021 Camilla Löwy <elmindreda@glfw.org>
 //
@@ -24,12 +24,12 @@
 //
 //========================================================================
 
-#define GLFW_MACOS_LIBRARY_TIMER_STATE _GLFWtimerMacOS macos;
+#define GLFW_COCOA_LIBRARY_TIMER_STATE  _GLFWtimerNS   ns;
 
-// macOS-specific global timer data
+// Cocoa-specific global timer data
 //
-typedef struct _GLFWtimerMacOS
+typedef struct _GLFWtimerNS
 {
     uint64_t        frequency;
-} _GLFWtimerMacOS;
+} _GLFWtimerNS;
 

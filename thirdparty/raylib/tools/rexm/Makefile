@@ -57,14 +57,6 @@ BUILD_WEB_ASYNCIFY_STACK_SIZE ?= 1048576
 BUILD_WEB_RESOURCES   ?= FALSE
 BUILD_WEB_RESOURCES_PATH  ?= resources
 
-# Detect the shell used by make: cmd preserves quotes, while sh removes them.
-ifndef PLATFORM_SHELL
-    PLATFORM_SHELL = sh
-    ifeq ($(shell echo "test"),"test")
-        PLATFORM_SHELL = cmd
-    endif
-endif
-
 # Determine PLATFORM_OS in case PLATFORM_DESKTOP selected
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     # No uname.exe on MinGW!, but OS=Windows_NT on Windows!
@@ -108,7 +100,7 @@ ifeq ($(PLATFORM_OS),WINDOWS)
         EMSCRIPTEN_PATH    ?= $(EMSDK_PATH)/upstream/emscripten
         CLANG_PATH          = $(EMSDK_PATH)/upstream/bin
         PYTHON_PATH         = $(EMSDK_PATH)/python/3.13.3_64bit
-        NODE_PATH           = $(EMSDK_PATH)/node/24.19.0_64bit/bin
+        NODE_PATH           = $(EMSDK_PATH)/node/22.16.0_64bit/bin
         export PATH         = $(EMSDK_PATH);$(EMSCRIPTEN_PATH);$(CLANG_PATH);$(NODE_PATH);$(PYTHON_PATH):$$(PATH)
     endif
 endif
@@ -298,7 +290,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),OSX)
         # Libraries for OSX 10.9 desktop compiling
         # NOTE: Required packages: libopenal-dev libegl1-mesa-dev
-        LDLIBS = -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreAudio -framework CoreVideo -framework QuartzCore
+        LDLIBS = -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreAudio -framework CoreVideo
     endif
     ifeq ($(PLATFORM_OS),BSD)
         # Libraries for FreeBSD, OpenBSD, NetBSD, DragonFly desktop compiling
@@ -353,11 +345,7 @@ $(PROJECT_NAME): $(OBJS)
 clean:
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),WINDOWS)
-        ifeq ($(PLATFORM_SHELL),cmd)
-		del /q *.o *.exe
-        else
-		rm -f *.o *.exe
-        endif
+		del *.o *.exe /s
     endif
     ifeq ($(PLATFORM_OS),LINUX)
 		find . -type f -executable -delete
@@ -372,10 +360,6 @@ ifeq ($(PLATFORM),PLATFORM_DRM)
 	rm -fv *.o
 endif
 ifeq ($(PLATFORM),PLATFORM_WEB)
-    ifeq ($(PLATFORM_SHELL),cmd)
 	del *.o *.html *.js
-    else
-	rm -f *.o *.html *.js
-    endif
 endif
 	@echo Cleaning done

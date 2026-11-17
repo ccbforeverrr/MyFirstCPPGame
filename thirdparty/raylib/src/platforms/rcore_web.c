@@ -54,8 +54,8 @@
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-// NOTE: Added flag if not provided by GLFW when using external library
-// WARNING: Latest GLFW release (GLFW 3.3.8) does not implement this flag, it was added for 3.4.0-dev
+// TODO: HACK: Added flag if not provided by GLFW when using external library
+// Latest GLFW release (GLFW 3.3.8) does not implement this flag, it was added for 3.4.0-dev
 #if !defined(GLFW_MOUSE_PASSTHROUGH)
     #define GLFW_MOUSE_PASSTHROUGH      0x0002000D
 #endif
@@ -76,6 +76,7 @@ typedef struct {
 
     char canvasId[64];                  // Keep current canvas id where wasm app is running
                                         // NOTE: Useful when trying to run multiple wasms in different canvases in same webpage
+
 #if defined(GRAPHICS_API_OPENGL_SOFTWARE)
     unsigned int *pixels;               // Pointer to pixel data buffer (RGBA 32bit format)
 #endif
@@ -110,9 +111,6 @@ static const char cursorLUT[11][12] = {
 //----------------------------------------------------------------------------------
 int InitPlatform(void);          // Initialize platform (graphics, inputs and more)
 void ClosePlatform(void);        // Close platform
-
-// OpenGL extensions loader
-static void *WebGLGetProcAddress(const char *procName); // Get WebGL extension procedure address, used by rlLoadExtensions()
 
 // Error callback event
 static void ErrorCallback(int error, const char *description); // GLFW3 Error Callback, runs on GLFW3 error
@@ -915,7 +913,7 @@ void ShowCursor(void)
     }
 }
 
-// Hide mouse cursor
+// Hides mouse cursor
 void HideCursor(void)
 {
     if (!CORE.Input.Mouse.cursorHidden)
@@ -926,7 +924,7 @@ void HideCursor(void)
     }
 }
 
-// Enable cursor (unlock cursor)
+// Enables cursor (unlock cursor)
 void EnableCursor(void)
 {
     emscripten_exit_pointerlock();
@@ -937,7 +935,7 @@ void EnableCursor(void)
     // NOTE: CORE.Input.Mouse.cursorLocked handled by EmscriptenPointerlockCallback()
 }
 
-// Disable cursor (lock cursor)
+// Disables cursor (lock cursor)
 void DisableCursor(void)
 {
     emscripten_request_pointerlock(platform.canvasId, 1);
@@ -1050,6 +1048,7 @@ void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float d
 void SetMousePosition(int x, int y)
 {
     CORE.Input.Mouse.currentPosition = (Vector2){ (float)x, (float)y };
+    CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
 
     if (CORE.Input.Mouse.cursorLocked) CORE.Input.Mouse.lockedPosition = CORE.Input.Mouse.currentPosition;
 
@@ -1089,7 +1088,7 @@ void PollInputEvents(void)
     CORE.Input.Keyboard.charPressedQueueCount = 0;
 
     // Reset last gamepad button/axis registered state
-    CORE.Input.Gamepad.lastButtonPressed = 0; // GAMEPAD_BUTTON_UNKNOWN
+    CORE.Input.Gamepad.lastButtonPressed = 0;       // GAMEPAD_BUTTON_UNKNOWN
     //CORE.Input.Gamepad.axisCount = 0;
 
     // Keyboard/Mouse input polling (automatically managed by GLFW3 through callback)
@@ -1131,7 +1130,7 @@ void PollInputEvents(void)
         // Register previous gamepad button states
         for (int k = 0; k < MAX_GAMEPAD_BUTTONS; k++) CORE.Input.Gamepad.previousButtonState[i][k] = CORE.Input.Gamepad.currentButtonState[i][k];
 
-        EmscriptenGamepadEvent gamepadState = { 0 };
+        EmscriptenGamepadEvent gamepadState;
 
         int result = emscripten_get_gamepad_status(i, &gamepadState);
 
@@ -1164,7 +1163,7 @@ void PollInputEvents(void)
                     default: break;
                 }
 
-                if (button + 1 != 0) // Check for valid button
+                if (button + 1 != 0)   // Check for valid button
                 {
                     if (gamepadState.digitalButton[j] == 1)
                     {
@@ -1316,8 +1315,9 @@ int InitPlatform(void)
     }, platform.canvasId);
 
     // Load memory framebuffer with desired screen size
-    // WARNING: Despite using a software framebuffer for blitting, GLFW still creates a WebGL canvas,
+    // NOTE: Despite using a software framebuffer for blitting, GLFW still creates a WebGL canvas,
     // but it is not being used, on SwapScreenBuffer() the pure software renderer is used
+    // TODO: Consider requesting another type of canvas, not a WebGL one --> Replace GLFW-web by Emscripten?
     platform.pixels = (unsigned int *)RL_CALLOC(CORE.Window.screen.width*CORE.Window.screen.height, sizeof(unsigned int));
 #else
     if (FLAG_IS_SET(CORE.Window.flags, FLAG_FULLSCREEN_MODE))
@@ -1408,9 +1408,7 @@ int InitPlatform(void)
     glfwSetCursorEnterCallback(platform.handle, MouseEnterCallback);
 
     glfwMakeContextCurrent(platform.handle);
-
-    // WARNING: result = glfwGetError(NULL), symbol can not be found in GLFW Web
-    result = true;
+    result = true; // TODO: WARNING: glfwGetError(NULL); symbol can not be found in Web
 
     // Check context activation
     if (result == true) //(result != GLFW_NO_WINDOW_CONTEXT) && (result != GLFW_PLATFORM_ERROR))
@@ -1445,7 +1443,7 @@ int InitPlatform(void)
 
     // Load OpenGL extensions
     // NOTE: GL procedures address loader is required to load extensions
-    rlLoadExtensions(WebGLGetProcAddress);
+    rlLoadExtensions(glfwGetProcAddress);
     //----------------------------------------------------------------------------
 
     // Initialize events callbacks
@@ -1500,24 +1498,6 @@ void ClosePlatform(void)
 {
     glfwDestroyWindow(platform.handle);
     glfwTerminate();
-}
-
-// Get WebGL extension procedure address
-// WARNING: rlGetProcAddress() uses this loader, so it only returns the functions listed below
-static void *WebGLGetProcAddress(const char *procName)
-{
-    void *proc = NULL;
-
-#if defined(GRAPHICS_API_OPENGL_ES2)
-    if (strcmp(procName, "glGenVertexArraysOES") == 0) proc = (void *)glGenVertexArraysOES;
-    else if (strcmp(procName, "glBindVertexArrayOES") == 0) proc = (void *)glBindVertexArrayOES;
-    else if (strcmp(procName, "glDeleteVertexArraysOES") == 0) proc = (void *)glDeleteVertexArraysOES;
-    else if (strcmp(procName, "glDrawArraysInstancedANGLE") == 0) proc = (void *)glDrawArraysInstancedANGLE;
-    else if (strcmp(procName, "glDrawElementsInstancedANGLE") == 0) proc = (void *)glDrawElementsInstancedANGLE;
-    else if (strcmp(procName, "glVertexAttribDivisorANGLE") == 0) proc = (void *)glVertexAttribDivisorANGLE;
-#endif
-
-    return proc;
 }
 
 // GLFW3 callback functions, called on GLFW registered events
@@ -1600,7 +1580,7 @@ static void WindowDropCallback(GLFWwindow *window, int count, const char **paths
         for (unsigned int i = 0; i < CORE.Window.dropFileCount; i++)
         {
             CORE.Window.dropFilepaths[i] = (char *)RL_CALLOC(MAX_FILEPATH_LENGTH, sizeof(char));
-            snprintf(CORE.Window.dropFilepaths[i], MAX_FILEPATH_LENGTH, "%s", paths[i]);
+            strncpy(CORE.Window.dropFilepaths[i], paths[i], MAX_FILEPATH_LENGTH - 1);
         }
     }
 }

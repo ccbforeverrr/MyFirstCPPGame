@@ -344,7 +344,7 @@ typedef enum {
 // Audio buffer struct
 struct rAudioBuffer {
     ma_data_converter converter;    // Audio data converter
-    unsigned char *converterResidual;       // Cached residual input frames for use by the converter
+    unsigned char* converterResidual;       // Cached residual input frames for use by the converter
     unsigned int converterResidualCount;    // The number of valid frames sitting in converterResidual
 
     AudioCallback callback;         // Audio buffer callback for buffer filling on audio threads
@@ -378,7 +378,7 @@ struct rAudioProcessor {
     rAudioProcessor *prev;          // Previous audio processor on the list
 };
 
-#define AudioBuffer rAudioBuffer    // WARNING: Renamed to avoid symbol collision with CoreAudio (macOS) AudioBuffer type
+#define AudioBuffer rAudioBuffer    // HACK: To avoid CoreAudio (macOS) symbol collision
 
 // Audio data context
 typedef struct AudioData {
@@ -434,7 +434,6 @@ static const char *GetFileName(const char *filePath);               // Get point
 static const char *GetFileNameWithoutExt(const char *filePath);     // Get filename string without extension (uses static string)
 
 static unsigned char *LoadFileData(const char *fileName, int *dataSize);    // Load file data as byte array (read)
-static void UnloadFileData(unsigned char *data);                     // Unload file data allocated by LoadFileData()
 static bool SaveFileData(const char *fileName, void *data, int dataSize);   // Save data to file from byte array (write)
 static bool SaveFileText(const char *fileName, char *text);         // Save text data to file (write), string must be '\0' terminated
 #endif
@@ -533,9 +532,8 @@ void CloseAudioDevice(void)
 {
     if (AUDIO.System.isReady)
     {
-        // Stop the device first (joins the callback thread) before destroying the mutex it locks
-        ma_device_uninit(&AUDIO.System.device);
         ma_mutex_uninit(&AUDIO.System.lock);
+        ma_device_uninit(&AUDIO.System.device);
         ma_context_uninit(&AUDIO.System.context);
 
         AUDIO.System.isReady = false;
@@ -823,7 +821,7 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
             wave.sampleRate = wav.sampleRate;
             wave.sampleSize = 16;
             wave.channels = wav.channels;
-            wave.data = (short *)RL_CALLOC((size_t)wave.frameCount*wave.channels, sizeof(short));
+            wave.data = (short *)RL_MALLOC((size_t)wave.frameCount*wave.channels*sizeof(short));
 
             // NOTE: Forcing conversion to 16bit sample size on reading
             drwav_read_pcm_frames_s16(&wav, wave.frameCount, (drwav_int16 *)wave.data);
@@ -845,8 +843,8 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
             wave.sampleRate = info.sample_rate;
             wave.sampleSize = 16;       // By default, ogg data is 16 bit per sample (short)
             wave.channels = info.channels;
-            wave.frameCount = stb_vorbis_stream_length_in_samples(oggData);  // NOTE: It returns frames!
-            wave.data = (short *)RL_CALLOC(wave.frameCount*wave.channels, sizeof(short));
+            wave.frameCount = (unsigned int)stb_vorbis_stream_length_in_samples(oggData);  // NOTE: It returns frames!
+            wave.data = (short *)RL_MALLOC(wave.frameCount*wave.channels*sizeof(short));
 
             // NOTE: Get the number of samples to process (be careful! asking for number of shorts, not bytes!)
             stb_vorbis_get_samples_short_interleaved(oggData, info.channels, (short *)wave.data, wave.frameCount*wave.channels);
@@ -859,7 +857,7 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
     else if ((strcmp(fileType, ".mp3") == 0) || (strcmp(fileType, ".MP3") == 0))
     {
         drmp3_config config = { 0 };
-        unsigned long long totalFrameCount = 0;
+        unsigned long long int totalFrameCount = 0;
 
         // NOTE: Forcing conversion to 32bit float sample size on reading
         wave.data = drmp3_open_memory_and_read_pcm_frames_f32(fileData, dataSize, &config, &totalFrameCount, NULL);
@@ -869,7 +867,7 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
         {
             wave.channels = config.channels;
             wave.sampleRate = config.sampleRate;
-            wave.frameCount = (unsigned int)totalFrameCount; // WARNING: Potential loss of data
+            wave.frameCount = (int)totalFrameCount;
         }
         else TRACELOG(LOG_WARNING, "WAVE: Failed to load MP3 data");
 
@@ -897,13 +895,13 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
 #if SUPPORT_FILEFORMAT_FLAC
     else if ((strcmp(fileType, ".flac") == 0) || (strcmp(fileType, ".FLAC") == 0))
     {
-        unsigned long long totalFrameCount = 0;
+        unsigned long long int totalFrameCount = 0;
 
         // NOTE: Forcing conversion to 16bit sample size on reading
         wave.data = drflac_open_memory_and_read_pcm_frames_s16(fileData, dataSize, &wave.channels, &wave.sampleRate, &totalFrameCount, NULL);
         wave.sampleSize = 16;
 
-        if (wave.data != NULL) wave.frameCount = (unsigned int)totalFrameCount; // WARNING: Potential loss of data
+        if (wave.data != NULL) wave.frameCount = (unsigned int)totalFrameCount;
         else TRACELOG(LOG_WARNING, "WAVE: Failed to load FLAC data");
     }
 #endif
@@ -914,7 +912,7 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
     return wave;
 }
 
-// Check if wave data is valid (data loaded and parameters)
+// Checks if wave data is valid (data loaded and parameters)
 bool IsWaveValid(Wave wave)
 {
     bool result = false;
@@ -982,13 +980,13 @@ Sound LoadSoundFromWave(Wave wave)
     return sound;
 }
 
-// Load sound alias, clone sound from existing sound data, clone does not own wave data
+// Clone sound from existing sound data, clone does not own wave data
 // NOTE: Wave data must be unallocated manually and will be shared across all clones
 Sound LoadSoundAlias(Sound source)
 {
     Sound sound = { 0 };
 
-    if ((source.stream.buffer != NULL) && (source.stream.buffer->data != NULL))
+    if (source.stream.buffer->data != NULL)
     {
         AudioBuffer *audioBuffer = LoadAudioBuffer(AUDIO_DEVICE_FORMAT, AUDIO_DEVICE_CHANNELS, AUDIO.System.device.sampleRate, 0, AUDIO_BUFFER_USAGE_STATIC);
 
@@ -1014,7 +1012,7 @@ Sound LoadSoundAlias(Sound source)
     return sound;
 }
 
-// Check if sound is valid (data loaded and buffers initialized)
+// Checks if a sound is valid (data loaded and buffers initialized)
 bool IsSoundValid(Sound sound)
 {
     bool result = false;
@@ -1049,7 +1047,6 @@ void UnloadSoundAlias(Sound alias)
     {
         UntrackAudioBuffer(alias.stream.buffer);
         ma_data_converter_uninit(&alias.stream.buffer->converter, NULL);
-        RL_FREE(alias.stream.buffer->converterResidual);
         RL_FREE(alias.stream.buffer);
     }
 }
@@ -1155,7 +1152,7 @@ bool ExportWaveAsCode(Wave wave, const char *fileName)
 
     // Get file name from path and convert variable name to uppercase
     char varFileName[256] = { 0 };
-    snprintf(varFileName, 256, "%s", GetFileNameWithoutExt(fileName)); // NOTE: Using function provided by [rcore] module
+    strncpy(varFileName, GetFileNameWithoutExt(fileName), 256 - 1);
     for (int i = 0; varFileName[i] != '\0'; i++) if (varFileName[i] >= 'a' && varFileName[i] <= 'z') { varFileName[i] = varFileName[i] - 32; }
 
     // Add wave information
@@ -1216,7 +1213,7 @@ void StopSound(Sound sound)
     StopAudioBuffer(sound.stream.buffer);
 }
 
-// Check if sound is playing
+// Check if a sound is playing
 bool IsSoundPlaying(Sound sound)
 {
     bool result = false;
@@ -1259,7 +1256,7 @@ void WaveFormat(Wave *wave, int sampleRate, int sampleSize, int channels)
         return;
     }
 
-    void *data = RL_CALLOC(frameCount*channels*(sampleSize/8), 1);
+    void *data = RL_MALLOC(frameCount*channels*(sampleSize/8));
 
     frameCount = (ma_uint32)ma_convert_frames(data, frameCount, formatOut, channels, sampleRate, wave->data, frameCountIn, formatIn, wave->channels, wave->sampleRate);
     if (frameCount == 0)
@@ -1394,7 +1391,7 @@ Music LoadMusicStream(const char *fileName)
             music.stream = LoadAudioStream(info.sample_rate, 16, info.channels);
 
             // WARNING: It seems this function returns length in frames, not samples, so multiply by channels
-            music.frameCount = stb_vorbis_stream_length_in_samples((stb_vorbis *)music.ctxData);
+            music.frameCount = (unsigned int)stb_vorbis_stream_length_in_samples((stb_vorbis *)music.ctxData);
             music.looping = true; // Looping enabled by default
             musicLoaded = true;
         }
@@ -1576,7 +1573,7 @@ Music LoadMusicStreamFromMemory(const char *fileType, const unsigned char *data,
     else if ((strcmp(fileType, ".ogg") == 0) || (strcmp(fileType, ".OGG") == 0))
     {
         // Open ogg audio stream
-        stb_vorbis *ctxOgg = stb_vorbis_open_memory(data, dataSize, NULL, NULL);
+        stb_vorbis *ctxOgg = stb_vorbis_open_memory((const unsigned char *)data, dataSize, NULL, NULL);
 
         if (ctxOgg != NULL)
         {
@@ -1588,7 +1585,7 @@ Music LoadMusicStreamFromMemory(const char *fileType, const unsigned char *data,
             music.stream = LoadAudioStream(info.sample_rate, 16, info.channels);
 
             // WARNING: It seems this function returns length in frames, not samples, so multiply by channels
-            music.frameCount = stb_vorbis_stream_length_in_samples((stb_vorbis *)music.ctxData);
+            music.frameCount = (unsigned int)stb_vorbis_stream_length_in_samples((stb_vorbis *)music.ctxData);
             music.looping = true;   // Looping enabled by default
             musicLoaded = true;
         }
@@ -1752,7 +1749,7 @@ Music LoadMusicStreamFromMemory(const char *fileType, const unsigned char *data,
     return music;
 }
 
-// Check if music stream is valid (context and buffers initialized)
+// Checks if a music stream is valid (context and buffers initialized)
 bool IsMusicValid(Music music)
 {
     return ((music.ctxData != NULL) &&          // Validate context loaded
@@ -1773,7 +1770,7 @@ void UnloadMusicStream(Music music)
     {
         if (false) { }
 #if SUPPORT_FILEFORMAT_WAV
-        else if (music.ctxType == MUSIC_AUDIO_WAV) { drwav_uninit((drwav *)music.ctxData); RL_FREE(music.ctxData); }
+        else if (music.ctxType == MUSIC_AUDIO_WAV) drwav_uninit((drwav *)music.ctxData);
 #endif
 #if SUPPORT_FILEFORMAT_OGG
         else if (music.ctxType == MUSIC_AUDIO_OGG) stb_vorbis_close((stb_vorbis *)music.ctxData);
@@ -1785,7 +1782,7 @@ void UnloadMusicStream(Music music)
         else if (music.ctxType == MUSIC_AUDIO_QOA) qoaplay_close((qoaplay_desc *)music.ctxData);
 #endif
 #if SUPPORT_FILEFORMAT_FLAC
-        else if (music.ctxType == MUSIC_AUDIO_FLAC) drflac_close((drflac *)music.ctxData);
+        else if (music.ctxType == MUSIC_AUDIO_FLAC) { drflac_close((drflac *)music.ctxData); drflac_free((drflac *)music.ctxData, NULL); }
 #endif
 #if SUPPORT_FILEFORMAT_XM
         else if (music.ctxType == MUSIC_MODULE_XM) jar_xm_free_context((jar_xm_context_t *)music.ctxData);
@@ -2069,7 +2066,7 @@ void SetMusicPitch(Music music, float pitch)
     SetAudioBufferPitch(music.stream.buffer, pitch);
 }
 
-// Set pan for music
+// Set pan for a music
 void SetMusicPan(Music music, float pan)
 {
     SetAudioBufferPan(music.stream.buffer, pan);
@@ -2157,7 +2154,7 @@ AudioStream LoadAudioStream(unsigned int sampleRate, unsigned int sampleSize, un
     return stream;
 }
 
-// Check if an audio stream is valid (buffers initialized)
+// Checks if an audio stream is valid (buffers initialized)
 bool IsAudioStreamValid(AudioStream stream)
 {
     return ((stream.buffer != NULL) &&    // Validate stream buffer
@@ -2661,7 +2658,7 @@ static void MixAudioFrames(float *framesOut, const float *framesIn, ma_uint32 fr
     const float localVolume = buffer->volume;
     const ma_uint32 channels = AUDIO.System.device.playback.channels;
 
-    if (channels == 2) // Consider panning
+    if (channels == 2)  // Consider panning
     {
         const float right = (buffer->pan + 1.0f)/2.0f; // Normalize: [-1..1] -> [0..1]
         const float left = 1.0f - right;
@@ -2828,7 +2825,7 @@ static const char *GetFileNameWithoutExt(const char *filePath)
     static char fileName[MAX_FILENAMEWITHOUTEXT_LENGTH] = { 0 };
     memset(fileName, 0, MAX_FILENAMEWITHOUTEXT_LENGTH);
 
-    if (filePath != NULL) snprintf(fileName, MAX_FILENAMEWITHOUTEXT_LENGTH, "%s", GetFileName(filePath));
+    if (filePath != NULL) strncpy(fileName, GetFileName(filePath), MAX_FILENAMEWITHOUTEXT_LENGTH - 1); // Get filename with extension
 
     int fileNameLength = (int)strlen(fileName); // Get size in bytes
 
@@ -2883,12 +2880,6 @@ static unsigned char *LoadFileData(const char *fileName, int *dataSize)
     else TRACELOG(LOG_WARNING, "FILEIO: File name provided is not valid");
 
     return data;
-}
-
-// Unload file data allocated by LoadFileData()
-static void UnloadFileData(unsigned char *data)
-{
-    RL_FREE(data);
 }
 
 // Save data to file from buffer
