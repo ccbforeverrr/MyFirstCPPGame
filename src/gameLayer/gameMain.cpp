@@ -1,8 +1,17 @@
 #include <raylib.h>
 #include "gameMain.h"
 #include <imgui.h>
+#include "assetManager.h"
+#include "gameMap.h"
 
-class playerData{
+
+
+
+class GanmeData{
+public:
+    GameMap gameMap;
+}gameData;
+class PlayerData{
 public:
     float X = 100;
     float Y = 100;
@@ -10,11 +19,45 @@ public:
     float Height = 50;
     Color c = RED;
 };
-playerData PlayerData{};
+PlayerData playerData{};
+AssetManager assetManager;
 
 bool initGame(){
+    assetManager.loadAll();
+
+    gameData.gameMap.create(30,10);
+
+    gameData.gameMap.getBlockUnsafe(0,6).type = Block::dirt;
+    gameData.gameMap.getBlockUnsafe(1,6).type = Block::dirt;
+    gameData.gameMap.getBlockUnsafe(2,6).type = Block::dirt;
+    gameData.gameMap.getBlockUnsafe(3,7).type = Block::dirt;
+    gameData.gameMap.getBlockUnsafe(4,8).type = Block::dirt;
+
     return 1;
 }
+
+void renderMap(){
+    for(int y = 0; y < gameData.gameMap.h; y++){
+        for(int x = 0; x < gameData.gameMap.w; x++){
+            auto &tempBlock = gameData.gameMap.getBlockUnsafe(x,y);
+            if(tempBlock.type != Block::air){
+                float size = 32;
+                float posX = x * size;
+                float posY = y * size;
+                DrawTexturePro(
+                    assetManager.dirt,
+                    {0,0,(float)assetManager.dirt.width, (float)assetManager.dirt.height},  //source
+                    {posX, posY, size, size},                                               //position
+                    {0,0},                                                                  //origin
+                    0,                                                                      //rotation
+                    WHITE                                                                   //tint
+                );
+
+            }
+        }
+    }
+}
+
 bool updateGame(){
     #pragma region secondWindow
     ImGui::Begin("PlayerSpeed");
@@ -26,13 +69,14 @@ bool updateGame(){
     #pragma endregion
     float deltaTime = GetFrameTime();
     if(deltaTime > 1.f/5){deltaTime = 1.f/5;}
+    if(IsKeyDown(KEY_W) && playerData.Y >= 0) {playerData.Y -= playerSpd * 300 * deltaTime;}
+    if(IsKeyDown(KEY_A) && playerData.X >= 0) {playerData.X -= playerSpd * 300 * deltaTime;}
+    if(IsKeyDown(KEY_S) && playerData.Y <= GetScreenHeight()-playerData.Height) {playerData.Y += playerSpd * 300 * deltaTime;}
+    if(IsKeyDown(KEY_D) && playerData.X <= GetScreenWidth()-playerData.Width) {playerData.X += playerSpd * 300 * deltaTime;}
 
-    if(IsKeyDown(KEY_W) && PlayerData.Y >= 0) {PlayerData.Y -= playerSpd * 300 * deltaTime;}
-    if(IsKeyDown(KEY_A) && PlayerData.X >= 0) {PlayerData.X -= playerSpd * 300 * deltaTime;}
-    if(IsKeyDown(KEY_S) && PlayerData.Y <= GetScreenHeight()-PlayerData.Height) {PlayerData.Y += playerSpd * 300 * deltaTime;}
-    if(IsKeyDown(KEY_D) && PlayerData.X <= GetScreenWidth()-PlayerData.Width) {PlayerData.X += playerSpd * 300 * deltaTime;}
+    renderMap();
 
-    DrawRectangle(PlayerData.X, PlayerData.Y, PlayerData.Width, PlayerData.Height, PlayerData.c);
+    DrawRectangle(playerData.X, playerData.Y, playerData.Width, playerData.Height, playerData.c);
 
     return 1;
 }

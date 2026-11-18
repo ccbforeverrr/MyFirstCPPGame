@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.15)
 
 
 project(cppgaming)
+set(CMAKE_CXX_STANDARD 17)
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 add_subdirectory(thirdparty/imgui-docking)
 add_subdirectory(thirdparty/rlimgui)
 add_subdirectory(thirdparty/raylib)
-set(CMAKE_CXX_STANDARD 17)
 add_executable(${PROJECT_NAME} ${MY_SOURCES})
 target_link_libraries(${PROJECT_NAME} raylib imgui rlimgui)
 if (APPLE)
@@ -16,3 +16,5 @@ if (APPLE)
 endif()
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/platform)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameLayer)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/resources/")
