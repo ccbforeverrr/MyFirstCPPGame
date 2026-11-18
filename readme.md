@@ -1,3 +1,3 @@
-Make sure:
-    raylib is installed
-    ImGui v 1.89.7-docking is installed
+WASD: move
+All the libraries needed are in 'thirdparty' folder now
+only tested on macos

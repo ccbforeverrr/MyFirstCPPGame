@@ -11,7 +11,7 @@ int main(){
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     SetExitKey(KEY_NULL);           //disable esc from closing the window
-    SetTargetFPS(120);
+    SetTargetFPS(60);
 
     if(!initGame()){
         return 0;
@@ -41,14 +41,6 @@ int main(){
             ImGui::End();
             #pragma endregion
 
-            #pragma region secondWindow
-            ImGui::Begin("test2");
-            ImGui::Text("hello world");
-            ImGui::Separator();
-            static float a = 0;
-            ImGui::SliderFloat("slider1", &a, 0, 1);
-            ImGui::End();
-            #pragma endregion
             if(!updateGame()){
                 CloseWindow();
             }
