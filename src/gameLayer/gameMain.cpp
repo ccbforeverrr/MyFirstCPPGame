@@ -47,28 +47,35 @@ void renderMap(){
         for(int x = 0; x < gameData.gameMap.w; x++){
             auto &tempBlock = gameData.gameMap.getBlockUnsafe(x,y);
             if(tempBlock.type != Block::air){
-                Rectangle textureUV;
-                textureUV.width = 32;
-                textureUV.height = 32;
-                textureUV.x = tempBlock.type * 32;
-                textureUV.y = 0;
                 float size = UNIT;
                 float posX = x * size;
                 float posY = y * size;
                 DrawTexturePro(
                     assetManager.textures,
-                    textureUV,                                                              //source
+                    getTextureAtlas(tempBlock.type, 0, 32, 32),                             //source
                     {posX, posY, size, size},                                               //position
                     {0,0},                                                                  //origin
                     0,                                                                      //rotation
                     WHITE                                                                   //tint
                 );
-
             }
         }
     }
 }
+void showCursorBlock(){
+    Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+    int blockX = (int)floor(worldPos.x/UNIT);
+    int blockY = (int)floor(worldPos.y/UNIT);
+    DrawTexturePro(
+        assetManager.frame,
+        getTextureAtlas(0,0,32,32),
+        {(float)blockX * UNIT, (float)blockY * UNIT, UNIT, UNIT},
+        {0,0},
+        0,
+        WHITE
+    );
 
+}
 bool updateGame(){
     #pragma region secondWindow
     ImGui::Begin("PlayerSpeed");
@@ -96,6 +103,8 @@ bool updateGame(){
     #pragma endregion
     BeginMode2D(gameData.camera);
     renderMap();
+    showCursorBlock();
+
 
     DrawRectangle(playerData.X, playerData.Y, playerData.Width, playerData.Height, playerData.c);
     EndMode2D();
