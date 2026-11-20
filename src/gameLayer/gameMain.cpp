@@ -74,6 +74,18 @@ void showCursorBlock(){
         0,
         WHITE
     );
+    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){                                       //break blocks
+        auto tempBlock = gameData.gameMap.getBlockSafe(blockX, blockY);
+        if(tempBlock){
+            *tempBlock = {};
+        }
+    }
+    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
+        auto tempBlock = gameData.gameMap.getBlockSafe(blockX, blockY);
+        if(tempBlock){
+            tempBlock->type = Block::clay;
+        }
+    }
 
 }
 bool updateGame(){
