@@ -29,10 +29,10 @@ bool initGame(){
     gameData.gameMap.create(30,10);
 
     gameData.gameMap.getBlockUnsafe(0,6).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(1,6).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(2,6).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(3,7).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(4,8).type = Block::dirt;
+    gameData.gameMap.getBlockUnsafe(1,6).type = Block::goldBlock;
+    gameData.gameMap.getBlockUnsafe(2,6).type = Block::ironBlock;
+    gameData.gameMap.getBlockUnsafe(3,7).type = Block::grass;
+    gameData.gameMap.getBlockUnsafe(4,8).type = Block::sandStone;
 
     gameData.camera.target = {0,0};
     gameData.camera.rotation = 0.0f;
@@ -47,12 +47,17 @@ void renderMap(){
         for(int x = 0; x < gameData.gameMap.w; x++){
             auto &tempBlock = gameData.gameMap.getBlockUnsafe(x,y);
             if(tempBlock.type != Block::air){
+                Rectangle textureUV;
+                textureUV.width = 32;
+                textureUV.height = 32;
+                textureUV.x = tempBlock.type * 32;
+                textureUV.y = 0;
                 float size = UNIT;
                 float posX = x * size;
                 float posY = y * size;
                 DrawTexturePro(
-                    assetManager.dirt,
-                    {0,0,(float)assetManager.dirt.width, (float)assetManager.dirt.height},  //source
+                    assetManager.textures,
+                    textureUV,                                                              //source
                     {posX, posY, size, size},                                               //position
                     {0,0},                                                                  //origin
                     0,                                                                      //rotation
