@@ -5,18 +5,19 @@
 #include "gameMap.h"
 
 
-
+#define UNIT 16.0f
 
 class GanmeData{
 public:
     GameMap gameMap;
+    Camera2D camera;
 }gameData;
 class PlayerData{
 public:
-    float X = 100;
-    float Y = 100;
-    float Width = 50;
-    float Height = 50;
+    float X = 0;
+    float Y = 0;
+    float Width = UNIT;
+    float Height = UNIT;
     Color c = RED;
 };
 PlayerData playerData{};
@@ -33,6 +34,11 @@ bool initGame(){
     gameData.gameMap.getBlockUnsafe(3,7).type = Block::dirt;
     gameData.gameMap.getBlockUnsafe(4,8).type = Block::dirt;
 
+    gameData.camera.target = {0,0};
+    gameData.camera.rotation = 0.0f;
+    gameData.camera.zoom = 2.0f;
+
+
     return 1;
 }
 
@@ -41,7 +47,7 @@ void renderMap(){
         for(int x = 0; x < gameData.gameMap.w; x++){
             auto &tempBlock = gameData.gameMap.getBlockUnsafe(x,y);
             if(tempBlock.type != Block::air){
-                float size = 32;
+                float size = UNIT;
                 float posX = x * size;
                 float posY = y * size;
                 DrawTexturePro(
@@ -68,16 +74,26 @@ bool updateGame(){
     ImGui::End();
     #pragma endregion
     float deltaTime = GetFrameTime();
-    if(deltaTime > 1.f/5){deltaTime = 1.f/5;}
-    if(IsKeyDown(KEY_W) && playerData.Y >= 0) {playerData.Y -= playerSpd * 300 * deltaTime;}
-    if(IsKeyDown(KEY_A) && playerData.X >= 0) {playerData.X -= playerSpd * 300 * deltaTime;}
-    if(IsKeyDown(KEY_S) && playerData.Y <= GetScreenHeight()-playerData.Height) {playerData.Y += playerSpd * 300 * deltaTime;}
-    if(IsKeyDown(KEY_D) && playerData.X <= GetScreenWidth()-playerData.Width) {playerData.X += playerSpd * 300 * deltaTime;}
-
+    gameData.camera.offset = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    
+    if(deltaTime > 1.f/50){deltaTime = 1.f/50;}
+    #pragma region playerControl
+    if(IsKeyDown(KEY_W) && playerData.Y >= 0) {playerData.Y -= playerSpd * 200 * deltaTime;}
+    if(IsKeyDown(KEY_A) && playerData.X >= 0) {playerData.X -= playerSpd * 200 * deltaTime;}
+    if(IsKeyDown(KEY_S) && playerData.Y <= GetScreenHeight()-playerData.Height) {playerData.Y += playerSpd * 200 * deltaTime;}
+    if(IsKeyDown(KEY_D) && playerData.X <= GetScreenWidth()-playerData.Width) {playerData.X += playerSpd * 200 * deltaTime;}
+    #pragma endregion
+    #pragma region cameraControl
+    if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 200.f * deltaTime;
+    if(IsKeyDown(KEY_DOWN)) gameData.camera.target.y += 200.f * deltaTime;
+    if(IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 200.f * deltaTime;
+    if(IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 200.f * deltaTime;
+    #pragma endregion
+    BeginMode2D(gameData.camera);
     renderMap();
 
     DrawRectangle(playerData.X, playerData.Y, playerData.Width, playerData.Height, playerData.c);
-
+    EndMode2D();
     return 1;
 }
 void closeGame(){

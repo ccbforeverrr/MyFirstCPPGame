@@ -10,8 +10,8 @@ int main(){
     rlImGuiSetup(true);
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    SetExitKey(KEY_NULL);           //disable esc from closing the window
-    SetTargetFPS(60);
+    SetExitKey(KEY_ESCAPE);           //disable esc from closing the window
+    SetTargetFPS(120);
 
     if(!initGame()){
         return 0;
