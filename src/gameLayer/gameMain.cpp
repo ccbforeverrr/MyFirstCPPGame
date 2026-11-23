@@ -62,6 +62,21 @@ void renderMap(){
         }
     }
 }
+void renderMapOpt(){
+    Vector2 topLeft = GetScreenToWorld2D({0,0}, gameData.camera);
+    Vector2 bottomRight = GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, gameData.camera);
+    int startXView = (int)(topLeft.x-1);
+    int startYView = (int)(topLeft.y-1);
+    int endXView = (int)(bottomRight.x+1);
+    int endYView = (int)(bottomRight.y+1);
+
+    startXView = std::clamp(startXView, 0, gameData.gameMap.w - 1);
+    startYView = std::clamp(startYView, 0, gameData.gameMap.h - 1);
+    endXView = std::clamp(endXView, 0, gameData.gameMap.w - 1);
+    endYView = std::clamp(endYView, 0, gameData.gameMap.h - 1);
+
+
+}
 void showCursorBlock(){
     Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
     int blockX = (int)floor(worldPos.x/UNIT);
@@ -82,13 +97,14 @@ void showCursorBlock(){
     }
     if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
         auto tempBlock = gameData.gameMap.getBlockSafe(blockX, blockY);
-        if(tempBlock){
+        if(tempBlock && tempBlock->type == Block::air){
             tempBlock->type = Block::clay;
         }
     }
 
 }
 bool updateGame(){
+    DrawFPS(10,10);
     #pragma region secondWindow
     ImGui::Begin("PlayerSpeed");
     ImGui::Text("adjust player speed");
@@ -107,12 +123,14 @@ bool updateGame(){
     if(IsKeyDown(KEY_S) && playerData.Y <= GetScreenHeight()-playerData.Height) {playerData.Y += playerSpd * 200 * deltaTime;}
     if(IsKeyDown(KEY_D) && playerData.X <= GetScreenWidth()-playerData.Width) {playerData.X += playerSpd * 200 * deltaTime;}
     #pragma endregion
-    #pragma region cameraControl
-    if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 200.f * deltaTime;
-    if(IsKeyDown(KEY_DOWN)) gameData.camera.target.y += 200.f * deltaTime;
-    if(IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 200.f * deltaTime;
-    if(IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 200.f * deltaTime;
-    #pragma endregion
+    // #pragma region cameraControl
+    // if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 200.f * deltaTime;
+    // if(IsKeyDown(KEY_DOWN)) gameData.camera.target.y += 200.f * deltaTime;
+    // if(IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 200.f * deltaTime;
+    // if(IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 200.f * deltaTime;
+    // #pragma endregion
+    gameData.camera.target.x = playerData.X;            //camera following player
+    gameData.camera.target.y = playerData.Y;
     BeginMode2D(gameData.camera);
     renderMap();
     showCursorBlock();
