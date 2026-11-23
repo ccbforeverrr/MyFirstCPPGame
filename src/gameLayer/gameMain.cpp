@@ -26,13 +26,20 @@ AssetManager assetManager;
 bool initGame(){
     assetManager.loadAll();
 
-    gameData.gameMap.create(30,10);
+    gameData.gameMap.create(300,300);
 
+    #pragma region map
+    for(int i = 0; i < 300; i++){
+        for(int j = 0; j < 300; j++){
+            gameData.gameMap.getBlockUnsafe(i,j).type = Block::stone;
+        }
+    }
     gameData.gameMap.getBlockUnsafe(0,6).type = Block::dirt;
     gameData.gameMap.getBlockUnsafe(1,6).type = Block::goldBlock;
     gameData.gameMap.getBlockUnsafe(2,6).type = Block::ironBlock;
     gameData.gameMap.getBlockUnsafe(3,7).type = Block::grass;
     gameData.gameMap.getBlockUnsafe(4,8).type = Block::sandStone;
+    #pragma endregion
 
     gameData.camera.target = {0,0};
     gameData.camera.rotation = 0.0f;
@@ -75,7 +82,24 @@ void renderMapOpt(){
     endXView = std::clamp(endXView, 0, gameData.gameMap.w - 1);
     endYView = std::clamp(endYView, 0, gameData.gameMap.h - 1);
 
-
+    for(int y = startYView; y < endYView; y++){
+        for(int x = startXView; x < endXView; x++){
+            auto &tempBlock = gameData.gameMap.getBlockUnsafe(x,y);
+            if(tempBlock.type != Block::air){
+                float size = UNIT;
+                float posX = x * size;
+                float posY = y * size;
+                DrawTexturePro(
+                    assetManager.textures,
+                    getTextureAtlas(tempBlock.type, 0, 32, 32),                             //source
+                    {posX, posY, size, size},                                               //position
+                    {0,0},                                                                  //origin
+                    0,                                                                      //rotation
+                    WHITE                                                                   //tint
+                );
+            }
+        }
+    }
 }
 void showCursorBlock(){
     Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
@@ -132,7 +156,7 @@ bool updateGame(){
     gameData.camera.target.x = playerData.X;            //camera following player
     gameData.camera.target.y = playerData.Y;
     BeginMode2D(gameData.camera);
-    renderMap();
+    renderMapOpt();
     showCursorBlock();
 
 
