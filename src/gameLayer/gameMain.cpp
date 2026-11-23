@@ -72,10 +72,10 @@ void renderMap(){
 void renderMapOpt(){
     Vector2 topLeft = GetScreenToWorld2D({0,0}, gameData.camera);
     Vector2 bottomRight = GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, gameData.camera);
-    int startXView = (int)(topLeft.x-1);
-    int startYView = (int)(topLeft.y-1);
-    int endXView = (int)(bottomRight.x+1);
-    int endYView = (int)(bottomRight.y+1);
+    int startXView = (int)(topLeft.x/UNIT-1);
+    int startYView = (int)(topLeft.y/UNIT-1);
+    int endXView = (int)(bottomRight.x/UNIT+1);
+    int endYView = (int)(bottomRight.y/UNIT+1);
 
     startXView = std::clamp(startXView, 0, gameData.gameMap.w - 1);
     startYView = std::clamp(startYView, 0, gameData.gameMap.h - 1);
