@@ -23,10 +23,13 @@ public:
 PlayerData playerData{};
 AssetManager assetManager;
 
+uint16_t mapHeight = 300;
+uint16_t mapWidth = 300;
+
 bool initGame(){
     assetManager.loadAll();
 
-    gameData.gameMap.create(300,300);
+    gameData.gameMap.create(mapWidth,mapHeight);
 
     #pragma region map
     for(int i = 0; i < 300; i++){
@@ -39,6 +42,7 @@ bool initGame(){
     gameData.gameMap.getBlockUnsafe(2,6).type = Block::ironBlock;
     gameData.gameMap.getBlockUnsafe(3,7).type = Block::grass;
     gameData.gameMap.getBlockUnsafe(4,8).type = Block::sandStone;
+    gameData.gameMap.getBlockUnsafe(mapWidth - 1,mapHeight - 1).type = Block::goldBlock;
     #pragma endregion
 
     gameData.camera.target = {0,0};
@@ -79,8 +83,8 @@ void renderMapOpt(){
 
     startXView = std::clamp(startXView, 0, gameData.gameMap.w - 1);
     startYView = std::clamp(startYView, 0, gameData.gameMap.h - 1);
-    endXView = std::clamp(endXView, 0, gameData.gameMap.w - 1);
-    endYView = std::clamp(endYView, 0, gameData.gameMap.h - 1);
+    endXView = std::clamp(endXView, 0, gameData.gameMap.w);
+    endYView = std::clamp(endYView, 0, gameData.gameMap.h);
 
     for(int y = startYView; y < endYView; y++){
         for(int x = startXView; x < endXView; x++){
@@ -144,8 +148,12 @@ bool updateGame(){
     #pragma region playerControl
     if(IsKeyDown(KEY_W) && playerData.Y >= 0) {playerData.Y -= playerSpd * 200 * deltaTime;}
     if(IsKeyDown(KEY_A) && playerData.X >= 0) {playerData.X -= playerSpd * 200 * deltaTime;}
-    if(IsKeyDown(KEY_S) && playerData.Y <= GetScreenHeight()-playerData.Height) {playerData.Y += playerSpd * 200 * deltaTime;}
-    if(IsKeyDown(KEY_D) && playerData.X <= GetScreenWidth()-playerData.Width) {playerData.X += playerSpd * 200 * deltaTime;}
+    if(IsKeyDown(KEY_S) && playerData.Y <= mapHeight * UNIT-playerData.Height) {playerData.Y += playerSpd * 200 * deltaTime;}
+    if(IsKeyDown(KEY_D) && playerData.X <= mapWidth * UNIT-playerData.Width) {playerData.X += playerSpd * 200 * deltaTime;}
+    if(playerData.Y + playerData.Height > mapHeight*UNIT) playerData.Y = mapHeight * UNIT - playerData.Height;
+    if(playerData.X + playerData.Width> mapWidth*UNIT) playerData.X = mapWidth * UNIT - playerData.Width;
+    if(playerData.Y < 0) playerData.Y = 0;
+    if(playerData.X < 0) playerData.X = 0;
     #pragma endregion
     // #pragma region cameraControl
     // if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 200.f * deltaTime;
